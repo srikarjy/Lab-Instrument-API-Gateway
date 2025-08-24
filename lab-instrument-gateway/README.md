@@ -19,6 +19,70 @@ A high-performance gRPC-based API gateway for managing laboratory instrument con
 - **Database**: AWS RDS PostgreSQL with Multi-AZ deployment
 - **Monitoring**: Prometheus, Grafana, CloudWatch
 
+## Security
+
+### 🔒 Security Features
+
+- **mTLS Authentication**: Mutual TLS for all gRPC connections
+- **JWT Authorization**: Role-based access control with JWT tokens
+- **Input Validation**: Comprehensive request validation and sanitization
+- **Rate Limiting**: Configurable rate limiting per client/endpoint
+- **SQL Injection Protection**: Prepared statements and parameterized queries
+- **CORS Protection**: Configurable CORS policies
+- **Encryption**: Data encryption at rest and in transit
+
+### 🛡️ Security Best Practices
+
+1. **Environment Variables**: Never commit sensitive data to version control
+   ```bash
+   cp .env.example .env
+   # Edit .env with your secure values
+   ```
+
+2. **Database Security**:
+   - Use strong passwords (min 12 characters with mixed case, numbers, symbols)
+   - Enable SSL/TLS for database connections
+   - Use database connection pooling with proper limits
+   - Regular security updates and patches
+
+3. **TLS Configuration**:
+   ```bash
+   # Generate TLS certificates for production
+   openssl genrsa -out server.key 2048
+   openssl req -new -x509 -key server.key -out server.crt -days 365
+   ```
+
+4. **JWT Security**:
+   - Use strong JWT secrets (min 32 characters)
+   - Implement token rotation and expiration
+   - Store tokens securely (httpOnly cookies recommended)
+
+5. **Network Security**:
+   - Use firewalls and security groups
+   - Implement network segmentation
+   - Regular security audits and penetration testing
+
+### 🚨 Security Checklist
+
+- [ ] Change all default passwords
+- [ ] Generate strong JWT secrets
+- [ ] Enable TLS/SSL for all connections
+- [ ] Configure proper CORS policies
+- [ ] Set up rate limiting
+- [ ] Enable audit logging
+- [ ] Regular security updates
+- [ ] Implement monitoring and alerting
+- [ ] Use secrets management (AWS Secrets Manager, HashiCorp Vault)
+- [ ] Enable database encryption at rest
+
+### 🔍 Security Monitoring
+
+- Monitor failed authentication attempts
+- Track unusual API usage patterns
+- Set up alerts for security events
+- Regular log analysis and threat detection
+- Implement intrusion detection systems
+
 ## Quick Start
 
 ### Prerequisites

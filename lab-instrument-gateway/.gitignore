@@ -32,10 +32,28 @@ go.work
 ehthumbs.db
 Thumbs.db
 
-# Environment files
+# Environment files - SECURITY: Never commit these
 .env
 .env.local
 .env.production
+.env.staging
+.env.development
+.env.test
+*.env
+
+# Security files - SECURITY: Never commit these
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+certs/
+keys/
+*.secret
+.secrets
+jwt-secret*
+api-keys*
 
 # Build artifacts
 /bin/
@@ -55,3 +73,29 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Database files - SECURITY: Never commit database files
+*.db
+*.sqlite
+*.sqlite3
+database/
+db-data/
+
+# Configuration files with secrets - SECURITY: Never commit these
+config.yaml
+config.json
+settings.yaml
+settings.json
+*-config.yaml
+*-config.json
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Security scan results
+security-scan-*
+vulnerability-report-*
+*.sarif
