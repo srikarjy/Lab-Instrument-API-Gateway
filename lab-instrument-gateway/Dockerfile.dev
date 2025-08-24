@@ -1,0 +1,35 @@
+# Development Dockerfile with hot reloading
+FROM golang:1.21-alpine AS development
+
+# Install necessary packages
+RUN apk add --no-cache git curl protobuf-dev
+
+# Install Air for hot reloading
+RUN go install github.com/air-verse/air@latest
+
+# Install protobuf generators
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Generate protobuf files
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    proto/lab_instrument.proto
+
+# Expose ports
+EXPOSE 8080 9090 8081
+
+# Use Air for hot reloading in development
+CMD ["air", "-c", ".air.toml"]

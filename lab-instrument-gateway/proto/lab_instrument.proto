@@ -1,0 +1,281 @@
+syntax = "proto3";
+
+package lab_instrument;
+
+option go_package = "github.com/yourorg/lab-gateway/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// Main service definition for Lab Instrument Gateway
+service LabInstrumentGateway {
+  // Device management
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  rpc GetDeviceStatus(GetDeviceStatusRequest) returns (GetDeviceStatusResponse);
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  
+  // Real-time streaming
+  rpc StreamData(stream StreamDataRequest) returns (stream StreamDataResponse);
+  
+  // Command execution
+  rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
+  
+  // Historical data
+  rpc GetMeasurements(GetMeasurementsRequest) returns (GetMeasurementsResponse);
+  
+  // Health and monitoring
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Device registration messages
+message RegisterDeviceRequest {
+  string device_id = 1;
+  string name = 2;
+  string type = 3;
+  string version = 4;
+  map<string, string> metadata = 5;
+  repeated string capabilities = 6;
+}
+
+message RegisterDeviceResponse {
+  bool success = 1;
+  string message = 2;
+  string session_id = 3;
+  google.protobuf.Timestamp registered_at = 4;
+}
+
+// Device status messages
+message GetDeviceStatusRequest {
+  string device_id = 1;
+}
+
+message GetDeviceStatusResponse {
+  string device_id = 1;
+  DeviceStatus status = 2;
+  google.protobuf.Timestamp last_seen = 3;
+  map<string, string> metadata = 4;
+  repeated string active_capabilities = 5;
+  HealthStatus health = 6;
+}
+
+// Device listing messages
+message ListDevicesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  DeviceFilter filter = 3;
+  string sort_by = 4;
+  bool ascending = 5;
+}
+
+message ListDevicesResponse {
+  repeated DeviceInfo devices = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message DeviceFilter {
+  repeated DeviceStatus status = 1;
+  repeated string types = 2;
+  google.protobuf.Timestamp last_seen_after = 3;
+  google.protobuf.Timestamp last_seen_before = 4;
+  map<string, string> metadata_filters = 5;
+}
+
+message DeviceInfo {
+  string device_id = 1;
+  string name = 2;
+  string type = 3;
+  string version = 4;
+  DeviceStatus status = 5;
+  google.protobuf.Timestamp last_seen = 6;
+  google.protobuf.Timestamp registered_at = 7;
+  map<string, string> metadata = 8;
+  repeated string capabilities = 9;
+}
+
+// Streaming messages
+message StreamDataRequest {
+  oneof message {
+    StreamInit init = 1;
+    MeasurementData data = 2;
+    Heartbeat heartbeat = 3;
+    StreamClose close = 4;
+  }
+}
+
+message StreamDataResponse {
+  oneof message {
+    StreamAck ack = 1;
+    Command command = 2;
+    StreamError error = 3;
+    Heartbeat heartbeat = 4;
+  }
+}
+
+message StreamInit {
+  string device_id = 1;
+  string session_id = 2;
+  repeated string data_types = 3;
+  int32 buffer_size = 4;
+}
+
+message StreamAck {
+  bool success = 1;
+  string message = 2;
+  string stream_id = 3;
+}
+
+message StreamClose {
+  string reason = 1;
+}
+
+message StreamError {
+  string code = 1;
+  string message = 2;
+  bool recoverable = 3;
+}
+
+// Measurement data messages
+message MeasurementData {
+  string device_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  repeated DataPoint data_points = 3;
+  string batch_id = 4;
+  int32 sequence_number = 5;
+}
+
+message DataPoint {
+  string type = 1;
+  double value = 2;
+  string unit = 3;
+  QualityCode quality = 4;
+  map<string, string> metadata = 5;
+}
+
+// Command messages
+message SendCommandRequest {
+  string device_id = 1;
+  Command command = 2;
+  int32 timeout_seconds = 3;
+  bool async = 4;
+}
+
+message SendCommandResponse {
+  bool success = 1;
+  string message = 2;
+  string command_id = 3;
+  CommandStatus status = 4;
+  google.protobuf.Timestamp submitted_at = 5;
+  CommandResult result = 6;
+}
+
+message Command {
+  string id = 1;
+  string type = 2;
+  map<string, string> parameters = 3;
+  int32 priority = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message CommandResult {
+  bool success = 1;
+  string message = 2;
+  map<string, string> data = 3;
+  google.protobuf.Timestamp executed_at = 4;
+  double execution_time_ms = 5;
+}
+
+// Historical data messages
+message GetMeasurementsRequest {
+  string device_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  repeated string data_types = 4;
+  int32 page_size = 5;
+  string page_token = 6;
+  AggregationType aggregation = 7;
+  int32 aggregation_interval_seconds = 8;
+}
+
+message GetMeasurementsResponse {
+  repeated MeasurementData measurements = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+  MeasurementStatistics statistics = 4;
+}
+
+message MeasurementStatistics {
+  int32 total_points = 1;
+  google.protobuf.Timestamp earliest_timestamp = 2;
+  google.protobuf.Timestamp latest_timestamp = 3;
+  map<string, DataTypeStats> data_type_stats = 4;
+}
+
+message DataTypeStats {
+  int32 count = 1;
+  double min_value = 2;
+  double max_value = 3;
+  double avg_value = 4;
+  double std_dev = 5;
+}
+
+// Health check messages
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  HealthStatus status = 1;
+  string message = 2;
+  map<string, string> details = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+message Heartbeat {
+  google.protobuf.Timestamp timestamp = 1;
+  string device_id = 2;
+  map<string, string> metrics = 3;
+}
+
+// Enums
+enum DeviceStatus {
+  DEVICE_STATUS_UNKNOWN = 0;
+  DEVICE_STATUS_ONLINE = 1;
+  DEVICE_STATUS_OFFLINE = 2;
+  DEVICE_STATUS_ERROR = 3;
+  DEVICE_STATUS_MAINTENANCE = 4;
+  DEVICE_STATUS_CONNECTING = 5;
+}
+
+enum QualityCode {
+  QUALITY_UNKNOWN = 0;
+  QUALITY_GOOD = 1;
+  QUALITY_BAD = 2;
+  QUALITY_UNCERTAIN = 3;
+  QUALITY_SUBSTITUTED = 4;
+}
+
+enum CommandStatus {
+  COMMAND_STATUS_UNKNOWN = 0;
+  COMMAND_STATUS_PENDING = 1;
+  COMMAND_STATUS_EXECUTING = 2;
+  COMMAND_STATUS_COMPLETED = 3;
+  COMMAND_STATUS_FAILED = 4;
+  COMMAND_STATUS_TIMEOUT = 5;
+  COMMAND_STATUS_CANCELLED = 6;
+}
+
+enum HealthStatus {
+  HEALTH_UNKNOWN = 0;
+  HEALTH_SERVING = 1;
+  HEALTH_NOT_SERVING = 2;
+  HEALTH_SERVICE_UNKNOWN = 3;
+}
+
+enum AggregationType {
+  AGGREGATION_NONE = 0;
+  AGGREGATION_AVERAGE = 1;
+  AGGREGATION_MIN = 2;
+  AGGREGATION_MAX = 3;
+  AGGREGATION_SUM = 4;
+  AGGREGATION_COUNT = 5;
+}
